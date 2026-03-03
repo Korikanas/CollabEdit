@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import TextEditor from './components/TextEditor';
 import Login from './components/Login';
@@ -6,7 +6,6 @@ import './App.css';
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
-  const [showLogin, setShowLogin] = useState(false);
 
   if (loading) {
     return (
@@ -18,7 +17,7 @@ const AppContent: React.FC = () => {
   }
 
   if (!user) {
-    return <Login onClose={() => setShowLogin(false)} />;
+    return <Login onClose={() => {}} />;
   }
 
   return <TextEditor onLogout={() => {}} />;
