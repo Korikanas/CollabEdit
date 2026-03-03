@@ -25,6 +25,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [showUserList, setShowUserList] = useState(false);
+  const [showMobileActions, setShowMobileActions] = useState(false);
 
   const { user, signOut } = useAuth();
 
@@ -33,6 +34,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ onLogout }) => {
       setWindowWidth(window.innerWidth);
       if (window.innerWidth > 768) {
         setIsMobileMenuOpen(false);
+        setShowMobileActions(false);
       }
     };
 
@@ -46,6 +48,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ onLogout }) => {
   const toggleStats = () => {
     setShowStats(!showStats);
     setIsMobileMenuOpen(false);
+    setShowMobileActions(false);
   };
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -61,6 +64,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ onLogout }) => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
       setIsMobileMenuOpen(false);
+      setShowMobileActions(false);
     } catch (err) {
       console.error('Failed to copy:', err);
       alert('Failed to copy to clipboard');
@@ -83,6 +87,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ onLogout }) => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
       setIsMobileMenuOpen(false);
+      setShowMobileActions(false);
     } catch (err) {
       console.error('Failed to save:', err);
       alert('Failed to save file');
@@ -103,6 +108,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ onLogout }) => {
         alert('Link copied to clipboard!');
       }
       setIsMobileMenuOpen(false);
+      setShowMobileActions(false);
     } catch (err) {
       console.error('Failed to share:', err);
     }
@@ -214,13 +220,13 @@ const TextEditor: React.FC<TextEditorProps> = ({ onLogout }) => {
       </div>
 
       {/* Main Editor Area */}
-      <div style={{ ...styles.mainContent, padding: isMobile ? '16px' : isTablet ? '20px' : '24px' }}>
+      <div style={{ ...styles.mainContent, padding: isMobile ? '12px' : isTablet ? '16px' : '24px' }}>
         <div style={styles.editorWrapper}>
           <div style={{ 
             ...styles.editorContainer, 
             backgroundColor: theme.editorBg, 
             borderColor: theme.border,
-            minHeight: isMobile ? '400px' : isTablet ? '450px' : '500px'
+            minHeight: isMobile ? '350px' : isTablet ? '400px' : '500px'
           }}>
             <textarea
               ref={textareaRef}
@@ -234,8 +240,8 @@ const TextEditor: React.FC<TextEditorProps> = ({ onLogout }) => {
                 fontSize: `${isMobile ? fontSize - 2 : fontSize}px`,
                 color: theme.text,
                 backgroundColor: theme.editorBg,
-                padding: isMobile ? '16px' : '24px',
-                minHeight: isMobile ? '400px' : isTablet ? '450px' : '500px'
+                padding: isMobile ? '12px' : '20px',
+                minHeight: isMobile ? '350px' : isTablet ? '400px' : '500px'
               }}
               placeholder="Start typing your collaborative document..."
             />
@@ -303,38 +309,90 @@ const TextEditor: React.FC<TextEditorProps> = ({ onLogout }) => {
         </div>
       </div>
 
-      {/* Toolbar Footer */}
+      {/* Toolbar Footer - Responsive with collapsible actions for mobile */}
       <div style={{ ...styles.footer, backgroundColor: theme.headerBg, borderTop: `1px solid ${theme.border}` }}>
         <div style={styles.footerContent}>
           <div style={styles.footerLeft}>
             <span style={styles.footerIcon}>✨</span>
-            <span style={{ ...styles.footerText, fontSize: isMobile ? '12px' : '13px' }}>
-              {allUsers.length} active user{allUsers.length !== 1 ? 's' : ''}
+            <span style={{ ...styles.footerText, fontSize: isMobile ? '11px' : '13px' }}>
+              {allUsers.length} active
             </span>
           </div>
           
-          <div style={styles.footerRight}>
-            <button onClick={toggleStats} style={styles.footerButton} title="Statistics">
-              <span style={styles.footerButtonIcon}>📊</span>
-            </button>
-            <button onClick={handleCopy} style={styles.footerButton} title="Copy">
-              <span style={styles.footerButtonIcon}>{copySuccess ? '✅' : '📋'}</span>
-            </button>
-            <button onClick={handleSave} style={styles.footerButton} title="Save">
-              <span style={styles.footerButtonIcon}>{saveSuccess ? '✅' : '💾'}</span>
-            </button>
-            <button onClick={handleShare} style={styles.footerButton} title="Share">
-              <span style={styles.footerButtonIcon}>🔗</span>
-            </button>
-            <button onClick={toggleTheme} style={styles.footerButton} title="Theme">
-              <span style={styles.footerButtonIcon}>{isDarkMode ? '🌙' : '☀️'}</span>
-            </button>
-            <div style={styles.fontSizeControls}>
-              <button onClick={decreaseFont} style={styles.fontSizeButton} title="Decrease font size">−</button>
-              <span style={styles.fontSizeValue}>{fontSize}</span>
-              <button onClick={increaseFont} style={styles.fontSizeButton} title="Increase font size">+</button>
+          {/* Mobile View - Collapsible Actions */}
+          {isMobile ? (
+            <div style={styles.mobileFooterRight}>
+              <button 
+                onClick={() => setShowMobileActions(!showMobileActions)} 
+                style={{ ...styles.mobileMenuButton, color: theme.text, borderColor: theme.border }}
+              >
+                <span style={styles.mobileMenuIcon}>⚡</span>
+                <span style={styles.mobileMenuLabel}>Actions</span>
+              </button>
+              
+              {showMobileActions && (
+                <div style={{ ...styles.mobileActionsPanel, backgroundColor: theme.dropdownBg, borderColor: theme.border }}>
+                  <button onClick={toggleStats} style={styles.mobileActionItem} title="Statistics">
+                    <span style={styles.mobileActionIcon}>📊</span>
+                    <span style={styles.mobileActionText}>Statistics</span>
+                    {showStats && <span style={styles.mobileActionBadge}>●</span>}
+                  </button>
+                  
+                  <button onClick={handleCopy} style={styles.mobileActionItem} title="Copy">
+                    <span style={styles.mobileActionIcon}>{copySuccess ? '✅' : '📋'}</span>
+                    <span style={styles.mobileActionText}>Copy</span>
+                    {copySuccess && <span style={styles.mobileActionBadge}>✓</span>}
+                  </button>
+                  
+                  <button onClick={handleSave} style={styles.mobileActionItem} title="Save">
+                    <span style={styles.mobileActionIcon}>{saveSuccess ? '✅' : '💾'}</span>
+                    <span style={styles.mobileActionText}>Save</span>
+                    {saveSuccess && <span style={styles.mobileActionBadge}>✓</span>}
+                  </button>
+                  
+                  <button onClick={handleShare} style={styles.mobileActionItem} title="Share">
+                    <span style={styles.mobileActionIcon}>🔗</span>
+                    <span style={styles.mobileActionText}>Share</span>
+                  </button>
+                  
+                  <button onClick={toggleTheme} style={styles.mobileActionItem} title="Theme">
+                    <span style={styles.mobileActionIcon}>{isDarkMode ? '🌙' : '☀️'}</span>
+                    <span style={styles.mobileActionText}>{isDarkMode ? 'Dark' : 'Light'}</span>
+                  </button>
+                  
+                  <div style={styles.mobileFontControls}>
+                    <button onClick={decreaseFont} style={{ ...styles.mobileFontButton, borderColor: theme.border }}>A−</button>
+                    <span style={styles.mobileFontValue}>{fontSize}px</span>
+                    <button onClick={increaseFont} style={{ ...styles.mobileFontButton, borderColor: theme.border }}>A+</button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            /* Desktop View - All Actions Visible */
+            <div style={styles.footerRight}>
+              <button onClick={toggleStats} style={styles.footerButton} title="Statistics">
+                <span style={styles.footerButtonIcon}>📊</span>
+              </button>
+              <button onClick={handleCopy} style={styles.footerButton} title="Copy">
+                <span style={styles.footerButtonIcon}>{copySuccess ? '✅' : '📋'}</span>
+              </button>
+              <button onClick={handleSave} style={styles.footerButton} title="Save">
+                <span style={styles.footerButtonIcon}>{saveSuccess ? '✅' : '💾'}</span>
+              </button>
+              <button onClick={handleShare} style={styles.footerButton} title="Share">
+                <span style={styles.footerButtonIcon}>🔗</span>
+              </button>
+              <button onClick={toggleTheme} style={styles.footerButton} title="Theme">
+                <span style={styles.footerButtonIcon}>{isDarkMode ? '🌙' : '☀️'}</span>
+              </button>
+              <div style={styles.fontSizeControls}>
+                <button onClick={decreaseFont} style={styles.fontSizeButton} title="Decrease font size">−</button>
+                <span style={styles.fontSizeValue}>{fontSize}</span>
+                <button onClick={increaseFont} style={styles.fontSizeButton} title="Increase font size">+</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -561,7 +619,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 700
   },
   footer: {
-    padding: '12px 24px',
+    padding: '8px 16px',
     boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
     backdropFilter: 'blur(10px)'
   },
@@ -576,12 +634,14 @@ const styles: { [key: string]: React.CSSProperties } = {
   footerLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: '6px'
   },
   footerRight: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: '8px',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end'
   },
   footerButton: {
     width: '36px',
@@ -632,7 +692,131 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   footerText: {
     opacity: 0.8
+  },
+  // Mobile-specific styles
+  mobileFooterRight: {
+    position: 'relative'
+  },
+  mobileMenuButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '6px 12px',
+    border: '1px solid',
+    borderRadius: '20px',
+    background: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+    fontSize: '13px',
+    transition: 'all 0.2s ease'
+  },
+  mobileMenuIcon: {
+    fontSize: '14px'
+  },
+  mobileMenuLabel: {
+    fontSize: '12px'
+  },
+  mobileActionsPanel: {
+    position: 'absolute',
+    bottom: '45px',
+    right: '0',
+    width: '200px',
+    border: '1px solid',
+    borderRadius: '12px',
+    padding: '8px',
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
+    zIndex: 1000,
+    animation: 'slideUp 0.2s ease'
+  },
+  mobileActionItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    width: '100%',
+    padding: '12px',
+    border: 'none',
+    borderRadius: '8px',
+    background: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+    fontSize: '14px',
+    transition: 'all 0.2s ease'
+  },
+  mobileActionIcon: {
+    fontSize: '18px',
+    minWidth: '24px'
+  },
+  mobileActionText: {
+    flex: 1,
+    textAlign: 'left'
+  },
+  mobileActionBadge: {
+    fontSize: '12px',
+    color: '#10b981'
+  },
+  mobileFontControls: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '8px 12px',
+    gap: '8px'
+  },
+  mobileFontButton: {
+    padding: '6px 12px',
+    border: '1px solid',
+    borderRadius: '6px',
+    background: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 600
+  },
+  mobileFontValue: {
+    fontSize: '13px',
+    fontWeight: 600,
+    minWidth: '40px',
+    textAlign: 'center'
   }
 };
+
+// Add global animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  textarea::placeholder {
+    color: #999;
+    opacity: 0.5;
+    font-style: italic;
+  }
+  
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
+
+  @media (max-width: 768px) {
+    textarea {
+      font-size: 14px;
+    }
+  }
+`;
+document.head.appendChild(style);
 
 export default TextEditor;
