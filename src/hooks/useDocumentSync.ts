@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { documentRef, onValue, set, off } from '../firebase';
+import { documentRef, onValue, set } from '../firebase'; // Removed 'off'
 import debounce from 'lodash/debounce';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -32,6 +32,8 @@ const useDocumentSync = (initialContent = '') => {
   
   // Use ref to track if component is mounted
   const isMounted = useRef(true);
+  // Track if this is a logout or refresh
+  const isLoggingOut = useRef(false);
 
   // Generate user color based on userId
   const getUserColor = (userId: string): string => {
@@ -67,10 +69,13 @@ const useDocumentSync = (initialContent = '') => {
       
       const data = snapshot.val() as DocumentData;
       if (data) {
-        // Update content only if it's different and from remote
-        if (data.content !== undefined && data.content !== content) {
-          isRemoteUpdate.current = true;
-          setContent(data.content);
+        // Update content
+        if (data.content !== undefined) {
+          // Only set if different to avoid loops
+          if (data.content !== content) {
+            isRemoteUpdate.current = true;
+            setContent(data.content);
+          }
         }
         
         // Update remote cursors (filter out own cursor)
@@ -99,8 +104,10 @@ const useDocumentSync = (initialContent = '') => {
           }, 0);
         }
         
-        // Reset remote update flag
-        isRemoteUpdate.current = false;
+        // Reset remote update flag after a delay
+        setTimeout(() => {
+          isRemoteUpdate.current = false;
+        }, 100);
       }
     });
 
@@ -111,29 +118,27 @@ const useDocumentSync = (initialContent = '') => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Only depend on user
 
-  // FIXED: Clean up cursor on unmount - ONLY when user is logging out, not on refresh
+  // FIXED: Only clean up cursor on explicit logout, NEVER on page refresh
   useEffect(() => {
-    // This effect now only runs when user changes (login/logout)
+    // This effect runs when user changes (login/logout)
+    
+    // If user becomes null (logged out), clean up cursor
+    if (!user && documentRef && isLoggingOut.current) {
+      // This is an explicit logout, clean up cursor
+      set(documentRef, {
+        content,
+        cursors: {} // Clear all cursors on logout
+      }).catch(err => console.error('Error cleaning up cursor:', err));
+      
+      // Reset logout flag
+      isLoggingOut.current = false;
+    }
+    
     return () => {
-      // Only remove cursor if user is logging out (not on page refresh)
-      if (user && documentRef && !isMounted.current) {
-        // Use a flag to check if this is a page refresh
-        const isPageRefresh = performance.navigation.type === 1;
-        
-        if (!isPageRefresh) {
-          // Only remove cursor on explicit logout, not on page refresh
-          const updatedCursors = { ...remoteCursors };
-          delete updatedCursors[user.uid];
-          
-          set(documentRef, {
-            content,
-            cursors: updatedCursors
-          }).catch(err => console.error('Error cleaning up cursor:', err));
-        }
-      }
+      // DO NOTHING on unmount - this prevents data loss on refresh
+      // We only clean up on explicit logout, not on component unmount
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]); // Only depend on user, not on remoteCursors or content
+  }, [user, content]);
 
   // Create debounced function with useMemo
   const debouncedUpdate = useMemo(
@@ -161,7 +166,7 @@ const useDocumentSync = (initialContent = '') => {
         timestamp: Date.now()
       });
     }, 100),
-    [user, remoteCursors] // Keep remoteCursors here for cursor updates
+    [user, remoteCursors]
   );
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -199,6 +204,11 @@ const useDocumentSync = (initialContent = '') => {
     }
   };
 
+  // Function to call when logging out (to be exposed if needed)
+  const setLoggingOut = () => {
+    isLoggingOut.current = true;
+  };
+
   return {
     content,
     setContent,
@@ -207,7 +217,8 @@ const useDocumentSync = (initialContent = '') => {
     remoteCursors,
     textareaRef,
     handleContentChange,
-    handleCursorChange
+    handleCursorChange,
+    setLoggingOut 
   };
 };
 
