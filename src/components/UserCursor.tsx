@@ -58,11 +58,6 @@ const UserCursor: React.FC<UserCursorProps> = ({
     return { offsetLeft, offsetTop };
   };
 
-  // Generate a consistent color based on user initials
-  const getAvatarColor = (): string => {
-    return userColor;
-  };
-
   return (
     <div
       ref={cursorRef}
