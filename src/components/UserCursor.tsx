@@ -80,7 +80,7 @@ const UserCursor: React.FC<UserCursorProps> = ({
         }}
       />
       
-      {/* User avatar with initials */}
+      {/* User avatar with initials - FIXED: Only show initials once */}
       <div
         style={{
           position: 'absolute',
@@ -94,27 +94,9 @@ const UserCursor: React.FC<UserCursorProps> = ({
           fontWeight: 600,
           boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
           whiteSpace: 'nowrap',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px'
         }}
       >
-        <div
-          style={{
-            width: '16px',
-            height: '16px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '10px',
-            fontWeight: 'bold'
-          }}
-        >
-          {userInitials}
-        </div>
-        <span>{userInitials}</span>
+        {userInitials}
       </div>
     </div>
   );
